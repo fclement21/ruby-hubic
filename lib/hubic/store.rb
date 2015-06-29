@@ -1,4 +1,5 @@
 require 'yaml'
+require 'fileutils'
 
 class Hubic
 class Store 
@@ -19,7 +20,8 @@ class Store
                        end)
     end
     
-    def self.new_file(user)
+    def self.[](user)
+        FileUtils.rm_f FILE
         self.new(file = FILE, user)
     end
     
