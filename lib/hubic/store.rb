@@ -1,5 +1,4 @@
 require 'yaml'
-require 'fileutils'
 
 class Hubic
 class Store 
@@ -12,16 +11,12 @@ class Store
     def initialize(file = FILE, user = nil)
         @file   = file
         @user   = user
-        @data   = Hash(begin
-                           if data = YAML.load_file(@file)
-                               @user.nil? ? data : data[@user]
-                           end
-                       rescue Errno::ENOENT
-                       end)
+        if data = YAML.load_file(@file)
+            @data   = {:data => @user.nil? ? data : data[@user]}
+        end
     end
     
     def self.[](user)
-        FileUtils.rm_f FILE
         self.new(file = FILE, user)
     end
     
@@ -30,7 +25,8 @@ class Store
                    ( begin 
                          YAML.load_file(@file)
                      rescue Errno::ENOENT
-                     end || {} ).merge(@user => @data)
+                     end
+                    )
                else
                    @data
                end
