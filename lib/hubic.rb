@@ -58,7 +58,7 @@ class Hubic
     # @param password_requester
     # @return [Hubic] an Hubic handler
     def self.for_user(user, password=nil, 
-                      store: Store.new_file(user), force: false, &password_requester)
+                      store: Store[user], force: false, &password_requester)
         h = Hubic.new(@@client_id, @@client_secret, @@redirect_uri)
         h.for_user(user, password, 
                    store: store, force: force, &password_requester)
@@ -93,7 +93,7 @@ class Hubic
     # @param force [true, false]
     # @param password_requester
     def for_user(user, password=nil,
-                 store: Store.new_file(user), force: false, &password_requester)
+                 store: Store[user], force: false, &password_requester)
         @store         = store
         @refresh_token = @store['refresh_token'] if @store && !force
 
@@ -167,20 +167,18 @@ class Hubic
             :scope         => 'account.r,usage.r,links.drw,credentials.r',
             :state         => 'random'
         }
-
         # Autofill confirmation 
         params = {}
         doc = Nokogiri::HTML(r.body)
         doc.css('input').each {|i|
             case i[:name]
             when 'login'
-                params[:login   ] = user
+                params[:login] = user
                 next
             when 'user_pwd'
                 params[:user_pwd] = password
                 next
             end
-            
             case i[:type]
             when 'checkbox', 'hidden', 'text'
                 (params[i[:name]] ||= []) << i[:value] if i[:name]
@@ -193,7 +191,6 @@ class Hubic
         # Confirm and get code
         r = @conn.post '/oauth/auth', params
         q = Hash[URI.decode_www_form(URI(r[:location]).query)]
-
         case r.status
         when 302
             q['code']
@@ -218,7 +215,7 @@ class Hubic
         j = JSON.parse(r.body)
         case r.status
         when 200
-            {   :acces_token   => j['access_token'],
+            {   :access_token   => j['access_token'],
                 :expires_at    => Time.parse(r[:date]) + j['expires_in'].to_i,
                 :refresh_token => j['refresh_token']
             }

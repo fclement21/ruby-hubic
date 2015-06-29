@@ -262,6 +262,7 @@ class Hubic
         data     = self.credentials
         endpoint = data['endpoint']
         token    = data['token']
+        puts data
         expires  = Time.parse(data['expires'])
 
         openstack_setup(endpoint, token, expires)
